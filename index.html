@@ -7,8 +7,33 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>🛒 Sistema de Ventas e Inventario</h1>
+    <!-- Pantalla de Login -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>🔐 Iniciar Sesión</h1>
+            <form id="formLogin">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="loginUsuario" required placeholder="Ingresa tu usuario">
+                </div>
+                
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" required placeholder="Ingresa tu contraseña">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Entrar</button>
+                <p class="hint">💡 Primera vez: crea tu usuario y contraseña</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sistema Principal -->
+    <div id="mainSystem" class="container" style="display: none;">
+        <div class="header-bar">
+            <h1>🛒 Sistema de Ventas e Inventario</h1>
+            <button class="btn btn-danger" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
+        </div>
         
         <!-- Pestañas de navegación -->
         <div class="tabs">
