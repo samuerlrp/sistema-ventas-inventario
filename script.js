@@ -1,6 +1,82 @@
-// Base de datos en memoria
+// Sistema de Login
+const loginScreen = document.getElementById('loginScreen');
+const mainSystem = document.getElementById('mainSystem');
+const formLogin = document.getElementById('formLogin');
+
+// Verificar si ya hay sesión activa
+if (localStorage.getItem('sesionActiva') === 'true') {
+    mostrarSistema();
+}
+
+// Manejar login
+formLogin.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const usuario = document.getElementById('loginUsuario').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    // Verificar si es la primera vez
+    const usuarioGuardado = localStorage.getItem('usuario');
+    const passwordGuardada = localStorage.getItem('password');
+    
+    if (!usuarioGuardado || !passwordGuardada) {
+        // Primera vez - Crear cuenta
+        localStorage.setItem('usuario', usuario);
+        localStorage.setItem('password', password);
+        alert('✅ ¡Cuenta creada exitosamente! Ahora puedes ingresar.');
+        mostrarSistema();
+    } else {
+        // Verificar credenciales
+        if (usuario === usuarioGuardado && password === passwordGuardada) {
+            alert('✅ ¡Bienvenido de nuevo!');
+            mostrarSistema();
+        } else {
+            alert('❌ Usuario o contraseña incorrectos');
+        }
+    }
+});
+
+function mostrarSistema() {
+    localStorage.setItem('sesionActiva', 'true');
+    loginScreen.style.display = 'none';
+    mainSystem.style.display = 'block';
+    cargarDatos();
+    mostrarInventario();
+}
+
+function cerrarSesion() {
+    if (confirm('¿Estás seguro de cerrar sesión?')) {
+        localStorage.setItem('sesionActiva', 'false');
+        location.reload();
+    }
+}
+
+// Base de datos con localStorage
 let productos = [];
 let ventas = [];
+
+// Cargar datos del localStorage
+function cargarDatos() {
+    const productosGuardados = localStorage.getItem('productos');
+    const ventasGuardadas = localStorage.getItem('ventas');
+    
+    if (productosGuardados) {
+        productos = JSON.parse(productosGuardados);
+    }
+    
+    if (ventasGuardadas) {
+        ventas = JSON.parse(ventasGuardadas);
+    }
+}
+
+// Guardar datos en localStorage
+function guardarProductos() {
+    localStorage.setItem('productos', JSON.stringify(productos));
+}
+
+function guardarVentas() {
+    localStorage.setItem('ventas', JSON.stringify(ventas));
+}
 
 // Elementos del DOM
 const tabs = document.querySelectorAll('.tab');
@@ -41,9 +117,10 @@ document.getElementById('formProducto').addEventListener('submit', (e) => {
     };
     
     productos.push(producto);
+    guardarProductos();
     e.target.reset();
     mostrarInventario();
-    alert('✅ Producto agregado exitosamente');
+    alert('✅ Producto agregado y guardado');
 });
 
 function mostrarInventario() {
@@ -71,6 +148,7 @@ function mostrarInventario() {
 function eliminarProducto(id) {
     if (confirm('¿Estás seguro de eliminar este producto?')) {
         productos = productos.filter(p => p.id !== id);
+        guardarProductos();
         mostrarInventario();
     }
 }
@@ -119,10 +197,13 @@ document.getElementById('formVenta').addEventListener('submit', (e) => {
     ventas.push(venta);
     producto.cantidad -= cantidad;
     
+    guardarVentas();
+    guardarProductos();
+    
     e.target.reset();
     mostrarVentas();
     mostrarInventario();
-    alert('✅ Venta registrada exitosamente');
+    alert('✅ Venta registrada y guardada');
 });
 
 function mostrarVentas() {
@@ -156,6 +237,3 @@ function mostrarEstadisticas() {
     document.getElementById('totalVentas').textContent = '$' + totalVentas.toFixed(2);
     document.getElementById('cantidadVentas').textContent = cantidadVentas;
 }
-
-// Inicializar
-mostrarInventario();
