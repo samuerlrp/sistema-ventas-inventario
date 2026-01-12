@@ -1,6 +1,7 @@
 // Base de datos con localStorage
 let productos = [];
 let ventas = [];
+let ultimaVenta = null;
 
 // Cargar datos del localStorage
 function cargarDatos() {
@@ -44,18 +45,15 @@ formLogin.addEventListener('submit', (e) => {
     const usuario = document.getElementById('loginUsuario').value;
     const password = document.getElementById('loginPassword').value;
     
-    // Verificar si es la primera vez
     const usuarioGuardado = localStorage.getItem('usuario');
     const passwordGuardada = localStorage.getItem('password');
     
     if (!usuarioGuardado || !passwordGuardada) {
-        // Primera vez - Crear cuenta
         localStorage.setItem('usuario', usuario);
         localStorage.setItem('password', password);
-        alert('✅ ¡Cuenta creada exitosamente! Ahora puedes ingresar.');
+        alert('✅ ¡Cuenta creada exitosamente!');
         mostrarSistema();
     } else {
-        // Verificar credenciales
         if (usuario === usuarioGuardado && password === passwordGuardada) {
             alert('✅ ¡Bienvenido de nuevo!');
             mostrarSistema();
@@ -70,16 +68,12 @@ function mostrarSistema() {
     loginScreen.style.display = 'none';
     mainSystem.style.display = 'block';
     
-    // IMPORTANTE: Cargar datos primero
     cargarDatos();
-    
-    // Luego mostrar todo
     mostrarInventario();
     cargarProductosVenta();
     mostrarVentas();
     mostrarEstadisticas();
-    
-    // Inicializar tabs
+    verificarStockBajo();
     inicializarTabs();
 }
 
@@ -88,6 +82,66 @@ function cerrarSesion() {
         localStorage.setItem('sesionActiva', 'false');
         location.reload();
     }
+}
+
+// ALERTAS DE STOCK BAJO
+function verificarStockBajo() {
+    const productosStockBajo = productos.filter(p => p.cantidad <= 5 && p.cantidad > 0);
+    const productosAgotados = productos.filter(p => p.cantidad === 0);
+    
+    const alertasDiv = document.getElementById('alertasStock');
+    const alertaTexto = document.getElementById('alertaTexto');
+    
+    if (productosStockBajo.length > 0 || productosAgotados.length > 0) {
+        let mensaje = '';
+        if (productosAgotados.length > 0) {
+            mensaje += `${productosAgotados.length} producto(s) agotado(s). `;
+        }
+        if (productosStockBajo.length > 0) {
+            mensaje += `${productosStockBajo.length} producto(s) con stock bajo.`;
+        }
+        alertaTexto.textContent = mensaje;
+        alertasDiv.style.display = 'block';
+    } else {
+        alertasDiv.style.display = 'none';
+    }
+    
+    mostrarTablaStockBajo();
+}
+
+function cerrarAlerta() {
+    document.getElementById('alertasStock').style.display = 'none';
+}
+
+function mostrarTablaStockBajo() {
+    const tbody = document.getElementById('tablaStockBajo');
+    const productosProblema = productos.filter(p => p.cantidad <= 5);
+    
+    if (productosProblema.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">✅ Todos los productos tienen stock suficiente</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = productosProblema.map(p => {
+        let estado = '';
+        let clase = '';
+        if (p.cantidad === 0) {
+            estado = '🔴 Agotado';
+            clase = 'stock-agotado';
+        } else if (p.cantidad <= 5) {
+            estado = '⚠️ Stock Bajo';
+            clase = 'stock-bajo';
+        }
+        
+        return `
+            <tr class="${clase}">
+                <td>${p.nombre}</td>
+                <td>${p.categoria}</td>
+                <td>${p.cantidad}</td>
+                <td><strong>${estado}</strong></td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // Inicializar sistema de pestañas
@@ -112,12 +166,15 @@ function inicializarTabs() {
                 mostrarVentas();
             } else if (target === 'estadisticas') {
                 mostrarEstadisticas();
+                verificarStockBajo();
+            } else if (target === 'graficas') {
+                mostrarGraficas();
             }
         });
     });
 }
 
-// INVENTARIO
+// INVENTARIO CON BÚSQUEDA Y FILTROS
 document.getElementById('formProducto').addEventListener('submit', (e) => {
     e.preventDefault();
     
@@ -133,29 +190,61 @@ document.getElementById('formProducto').addEventListener('submit', (e) => {
     guardarProductos();
     e.target.reset();
     mostrarInventario();
-    alert('✅ Producto agregado y guardado');
+    verificarStockBajo();
+    alert('✅ Producto agregado exitosamente');
 });
 
-function mostrarInventario() {
+// Búsqueda y filtros en tiempo real
+document.getElementById('buscarProducto').addEventListener('input', filtrarProductos);
+document.getElementById('filtroCategoria').addEventListener('change', filtrarProductos);
+document.getElementById('filtroStock').addEventListener('change', filtrarProductos);
+
+function filtrarProductos() {
+    const busqueda = document.getElementById('buscarProducto').value.toLowerCase();
+    const categoria = document.getElementById('filtroCategoria').value;
+    const stock = document.getElementById('filtroStock').value;
+    
+    let productosFiltrados = productos.filter(p => {
+        const cumpleBusqueda = p.nombre.toLowerCase().includes(busqueda);
+        const cumpleCategoria = !categoria || p.categoria === categoria;
+        
+        let cumpleStock = true;
+        if (stock === 'bajo') cumpleStock = p.cantidad <= 5 && p.cantidad > 0;
+        if (stock === 'disponible') cumpleStock = p.cantidad > 5;
+        if (stock === 'agotado') cumpleStock = p.cantidad === 0;
+        
+        return cumpleBusqueda && cumpleCategoria && cumpleStock;
+    });
+    
+    mostrarInventario(productosFiltrados);
+}
+
+function mostrarInventario(productosMostrar = productos) {
     const tbody = document.getElementById('tablaProductos');
     
-    if (productos.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay productos en el inventario</td></tr>';
+    if (productosMostrar.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay productos que coincidan con los filtros</td></tr>';
         return;
     }
     
-    tbody.innerHTML = productos.map(p => `
-        <tr>
-            <td>${p.nombre}</td>
-            <td>${p.categoria}</td>
-            <td>$${p.precio.toFixed(2)}</td>
-            <td>${p.cantidad}</td>
-            <td>$${(p.precio * p.cantidad).toFixed(2)}</td>
-            <td class="actions">
-                <button class="btn btn-danger" onclick="eliminarProducto(${p.id})">Eliminar</button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = productosMostrar.map(p => {
+        let clase = '';
+        if (p.cantidad === 0) clase = 'stock-agotado';
+        else if (p.cantidad <= 5) clase = 'stock-bajo';
+        
+        return `
+            <tr class="${clase}">
+                <td>${p.nombre}</td>
+                <td>${p.categoria}</td>
+                <td>$${p.precio.toFixed(2)}</td>
+                <td>${p.cantidad}</td>
+                <td>$${(p.precio * p.cantidad).toFixed(2)}</td>
+                <td class="actions">
+                    <button class="btn btn-danger" onclick="eliminarProducto(${p.id})">Eliminar</button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function eliminarProducto(id) {
@@ -163,6 +252,7 @@ function eliminarProducto(id) {
         productos = productos.filter(p => p.id !== id);
         guardarProductos();
         mostrarInventario();
+        verificarStockBajo();
         alert('✅ Producto eliminado');
     }
 }
@@ -188,7 +278,14 @@ document.getElementById('productoVenta').addEventListener('change', (e) => {
         document.getElementById('precioVenta').value = producto.precio;
         document.getElementById('cantidadVenta').max = producto.cantidad;
         document.getElementById('cantidadVenta').value = '';
+        document.getElementById('totalVenta').value = '';
     }
+});
+
+document.getElementById('cantidadVenta').addEventListener('input', (e) => {
+    const precio = parseFloat(document.getElementById('precioVenta').value) || 0;
+    const cantidad = parseInt(e.target.value) || 0;
+    document.getElementById('totalVenta').value = (precio * cantidad).toFixed(2);
 });
 
 document.getElementById('formVenta').addEventListener('submit', (e) => {
@@ -210,6 +307,7 @@ document.getElementById('formVenta').addEventListener('submit', (e) => {
     
     const venta = {
         id: Date.now(),
+        productoId: producto.id,
         productoNombre: producto.nombre,
         cantidad: cantidad,
         precioUnitario: producto.precio,
@@ -225,6 +323,7 @@ document.getElementById('formVenta').addEventListener('submit', (e) => {
     
     ventas.push(venta);
     producto.cantidad -= cantidad;
+    ultimaVenta = venta;
     
     guardarVentas();
     guardarProductos();
@@ -234,20 +333,38 @@ document.getElementById('formVenta').addEventListener('submit', (e) => {
     cargarProductosVenta();
     mostrarInventario();
     mostrarEstadisticas();
+    verificarStockBajo();
     
+    document.getElementById('btnImprimir').style.display = 'inline-block';
     alert('✅ Venta registrada exitosamente\n\nTotal: $' + venta.total.toFixed(2));
 });
 
-function mostrarVentas() {
+// Búsqueda de ventas
+document.getElementById('buscarVenta').addEventListener('input', filtrarVentas);
+document.getElementById('filtroFecha').addEventListener('change', filtrarVentas);
+
+function filtrarVentas() {
+    const busqueda = document.getElementById('buscarVenta').value.toLowerCase();
+    const fecha = document.getElementById('filtroFecha').value;
+    
+    let ventasFiltradas = ventas.filter(v => {
+        const cumpleBusqueda = v.productoNombre.toLowerCase().includes(busqueda);
+        const cumpleFecha = !fecha || v.fecha.includes(fecha.split('-').reverse().join('/'));
+        return cumpleBusqueda && cumpleFecha;
+    });
+    
+    mostrarVentas(ventasFiltradas);
+}
+
+function mostrarVentas(ventasMostrar = ventas) {
     const tbody = document.getElementById('tablaVentas');
     
-    if (ventas.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay ventas registradas</td></tr>';
+    if (ventasMostrar.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No hay ventas que coincidan con los filtros</td></tr>';
         return;
     }
     
-    // Mostrar ventas más recientes primero
-    const ventasOrdenadas = [...ventas].reverse();
+    const ventasOrdenadas = [...ventasMostrar].reverse();
     
     tbody.innerHTML = ventasOrdenadas.map(v => `
         <tr>
@@ -258,6 +375,22 @@ function mostrarVentas() {
             <td><strong>$${v.total.toFixed(2)}</strong></td>
         </tr>
     `).join('');
+}
+
+// IMPRIMIR TICKET
+function imprimirTicket() {
+    if (!ultimaVenta) {
+        alert('❌ No hay ninguna venta reciente para imprimir');
+        return;
+    }
+    
+    document.getElementById('ticketFecha').textContent = ultimaVenta.fecha;
+    document.getElementById('ticketProducto').textContent = ultimaVenta.productoNombre;
+    document.getElementById('ticketCantidad').textContent = ultimaVenta.cantidad;
+    document.getElementById('ticketPrecio').textContent = ultimaVenta.precioUnitario.toFixed(2);
+    document.getElementById('ticketTotal').textContent = ultimaVenta.total.toFixed(2);
+    
+    window.print();
 }
 
 // ESTADÍSTICAS
@@ -271,4 +404,137 @@ function mostrarEstadisticas() {
     document.getElementById('valorInventario').textContent = '$' + valorInventario.toFixed(2);
     document.getElementById('totalVentas').textContent = '$' + totalVentas.toFixed(2);
     document.getElementById('cantidadVentas').textContent = cantidadVentas;
+}
+
+// GRÁFICAS
+let graficaVentasDiarias, graficaProductos, graficaCategorias;
+
+function mostrarGraficas() {
+    crearGraficaVentasDiarias();
+    crearGraficaProductosMasVendidos();
+    crearGraficaVentasPorCategoria();
+}
+
+function crearGraficaVentasDiarias() {
+    const ctx = document.getElementById('graficaVentasDiarias');
+    
+    // Agrupar ventas por fecha
+    const ventasPorDia = {};
+    ventas.forEach(v => {
+        const fecha = v.fecha.split(',')[0];
+        ventasPorDia[fecha] = (ventasPorDia[fecha] || 0) + v.total;
+    });
+    
+    const fechas = Object.keys(ventasPorDia).slice(-7);
+    const totales = fechas.map(f => ventasPorDia[f]);
+    
+    if (graficaVentasDiarias) graficaVentasDiarias.destroy();
+    
+    graficaVentasDiarias = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: fechas,
+            datasets: [{
+                label: 'Ventas ($)',
+                data: totales,
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: true }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+function crearGraficaProductosMasVendidos() {
+    const ctx = document.getElementById('graficaProductos');
+    
+    // Contar productos vendidos
+    const productosVendidos = {};
+    ventas.forEach(v => {
+        productosVendidos[v.productoNombre] = (productosVendidos[v.productoNombre] || 0) + v.cantidad;
+    });
+    
+    const nombres = Object.keys(productosVendidos).slice(0, 5);
+    const cantidades = nombres.map(n => productosVendidos[n]);
+    
+    if (graficaProductos) graficaProductos.destroy();
+    
+    graficaProductos = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: nombres,
+            datasets: [{
+                label: 'Unidades Vendidas',
+                data: cantidades,
+                backgroundColor: [
+                    '#667eea',
+                    '#764ba2',
+                    '#f093fb',
+                    '#4facfe',
+                    '#43e97b'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+function crearGraficaVentasPorCategoria() {
+    const ctx = document.getElementById('graficaCategorias');
+    
+    // Agrupar ventas por categoría
+    const ventasPorCategoria = {};
+    ventas.forEach(v => {
+        const producto = productos.find(p => p.id === v.productoId);
+        if (producto) {
+            ventasPorCategoria[producto.categoria] = (ventasPorCategoria[producto.categoria] || 0) + v.total;
+        }
+    });
+    
+    const categorias = Object.keys(ventasPorCategoria);
+    const totales = categorias.map(c => ventasPorCategoria[c]);
+    
+    if (graficaCategorias) graficaCategorias.destroy();
+    
+    graficaCategorias = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: categorias,
+            datasets: [{
+                data: totales,
+                backgroundColor: [
+                    '#667eea',
+                    '#764ba2',
+                    '#f093fb',
+                    '#4facfe',
+                    '#43e97b',
+                    '#f9d423'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
 }
