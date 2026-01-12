@@ -1,12 +1,41 @@
+// Base de datos con localStorage
+let productos = [];
+let ventas = [];
+
+// Cargar datos del localStorage
+function cargarDatos() {
+    const productosGuardados = localStorage.getItem('productos');
+    const ventasGuardadas = localStorage.getItem('ventas');
+    
+    if (productosGuardados) {
+        productos = JSON.parse(productosGuardados);
+    }
+    
+    if (ventasGuardadas) {
+        ventas = JSON.parse(ventasGuardadas);
+    }
+}
+
+// Guardar datos en localStorage
+function guardarProductos() {
+    localStorage.setItem('productos', JSON.stringify(productos));
+}
+
+function guardarVentas() {
+    localStorage.setItem('ventas', JSON.stringify(ventas));
+}
+
 // Sistema de Login
 const loginScreen = document.getElementById('loginScreen');
 const mainSystem = document.getElementById('mainSystem');
 const formLogin = document.getElementById('formLogin');
 
 // Verificar si ya hay sesión activa
-if (localStorage.getItem('sesionActiva') === 'true') {
-    mostrarSistema();
-}
+window.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('sesionActiva') === 'true') {
+        mostrarSistema();
+    }
+});
 
 // Manejar login
 formLogin.addEventListener('submit', (e) => {
@@ -40,8 +69,18 @@ function mostrarSistema() {
     localStorage.setItem('sesionActiva', 'true');
     loginScreen.style.display = 'none';
     mainSystem.style.display = 'block';
+    
+    // IMPORTANTE: Cargar datos primero
     cargarDatos();
+    
+    // Luego mostrar todo
     mostrarInventario();
+    cargarProductosVenta();
+    mostrarVentas();
+    mostrarEstadisticas();
+    
+    // Inicializar tabs
+    inicializarTabs();
 }
 
 function cerrarSesion() {
@@ -51,58 +90,32 @@ function cerrarSesion() {
     }
 }
 
-// Base de datos con localStorage
-let productos = [];
-let ventas = [];
-
-// Cargar datos del localStorage
-function cargarDatos() {
-    const productosGuardados = localStorage.getItem('productos');
-    const ventasGuardadas = localStorage.getItem('ventas');
+// Inicializar sistema de pestañas
+function inicializarTabs() {
+    const tabs = document.querySelectorAll('.tab');
+    const sections = document.querySelectorAll('.section');
     
-    if (productosGuardados) {
-        productos = JSON.parse(productosGuardados);
-    }
-    
-    if (ventasGuardadas) {
-        ventas = JSON.parse(ventasGuardadas);
-    }
-}
-
-// Guardar datos en localStorage
-function guardarProductos() {
-    localStorage.setItem('productos', JSON.stringify(productos));
-}
-
-function guardarVentas() {
-    localStorage.setItem('ventas', JSON.stringify(ventas));
-}
-
-// Elementos del DOM
-const tabs = document.querySelectorAll('.tab');
-const sections = document.querySelectorAll('.section');
-
-// Cambiar entre pestañas
-tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        const target = tab.dataset.tab;
-        
-        tabs.forEach(t => t.classList.remove('active'));
-        sections.forEach(s => s.classList.remove('active'));
-        
-        tab.classList.add('active');
-        document.getElementById(target).classList.add('active');
-        
-        if (target === 'inventario') {
-            mostrarInventario();
-        } else if (target === 'ventas') {
-            cargarProductosVenta();
-            mostrarVentas();
-        } else if (target === 'estadisticas') {
-            mostrarEstadisticas();
-        }
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.tab;
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            sections.forEach(s => s.classList.remove('active'));
+            
+            tab.classList.add('active');
+            document.getElementById(target).classList.add('active');
+            
+            if (target === 'inventario') {
+                mostrarInventario();
+            } else if (target === 'ventas') {
+                cargarProductosVenta();
+                mostrarVentas();
+            } else if (target === 'estadisticas') {
+                mostrarEstadisticas();
+            }
+        });
     });
-});
+}
 
 // INVENTARIO
 document.getElementById('formProducto').addEventListener('submit', (e) => {
@@ -150,14 +163,23 @@ function eliminarProducto(id) {
         productos = productos.filter(p => p.id !== id);
         guardarProductos();
         mostrarInventario();
+        alert('✅ Producto eliminado');
     }
 }
 
 // VENTAS
 function cargarProductosVenta() {
     const select = document.getElementById('productoVenta');
+    
+    if (productos.length === 0) {
+        select.innerHTML = '<option value="">No hay productos disponibles</option>';
+        return;
+    }
+    
     select.innerHTML = '<option value="">Seleccionar producto</option>' + 
-        productos.map(p => `<option value="${p.id}">${p.nombre} - $${p.precio} (Stock: ${p.cantidad})</option>`).join('');
+        productos.filter(p => p.cantidad > 0).map(p => 
+            `<option value="${p.id}">${p.nombre} - $${p.precio} (Stock: ${p.cantidad})</option>`
+        ).join('');
 }
 
 document.getElementById('productoVenta').addEventListener('change', (e) => {
@@ -165,6 +187,7 @@ document.getElementById('productoVenta').addEventListener('change', (e) => {
     if (producto) {
         document.getElementById('precioVenta').value = producto.precio;
         document.getElementById('cantidadVenta').max = producto.cantidad;
+        document.getElementById('cantidadVenta').value = '';
     }
 });
 
@@ -181,7 +204,7 @@ document.getElementById('formVenta').addEventListener('submit', (e) => {
     }
     
     if (cantidad > producto.cantidad) {
-        alert('❌ No hay suficiente stock');
+        alert('❌ No hay suficiente stock. Stock disponible: ' + producto.cantidad);
         return;
     }
     
@@ -191,7 +214,13 @@ document.getElementById('formVenta').addEventListener('submit', (e) => {
         cantidad: cantidad,
         precioUnitario: producto.precio,
         total: cantidad * producto.precio,
-        fecha: new Date().toLocaleString()
+        fecha: new Date().toLocaleString('es-PE', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        })
     };
     
     ventas.push(venta);
@@ -202,8 +231,11 @@ document.getElementById('formVenta').addEventListener('submit', (e) => {
     
     e.target.reset();
     mostrarVentas();
+    cargarProductosVenta();
     mostrarInventario();
-    alert('✅ Venta registrada y guardada');
+    mostrarEstadisticas();
+    
+    alert('✅ Venta registrada exitosamente\n\nTotal: $' + venta.total.toFixed(2));
 });
 
 function mostrarVentas() {
@@ -214,13 +246,16 @@ function mostrarVentas() {
         return;
     }
     
-    tbody.innerHTML = ventas.map(v => `
+    // Mostrar ventas más recientes primero
+    const ventasOrdenadas = [...ventas].reverse();
+    
+    tbody.innerHTML = ventasOrdenadas.map(v => `
         <tr>
             <td>${v.fecha}</td>
             <td>${v.productoNombre}</td>
             <td>${v.cantidad}</td>
             <td>$${v.precioUnitario.toFixed(2)}</td>
-            <td>$${v.total.toFixed(2)}</td>
+            <td><strong>$${v.total.toFixed(2)}</strong></td>
         </tr>
     `).join('');
 }
