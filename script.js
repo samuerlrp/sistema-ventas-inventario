@@ -2,56 +2,72 @@
 let productos = [];
 let ventas = [];
 let ultimaVenta = null;
-let ventasFiltradas = [];
 
-// Usuario fijo
-const usuarioFijo = "MARROCO";
-const passwordFijo = "172008";
+// Cargar datos del localStorage
+function cargarDatos() {
+    const productosGuardados = localStorage.getItem('productos');
+    const ventasGuardadas = localStorage.getItem('ventas');
+    
+    if (productosGuardados) {
+        productos = JSON.parse(productosGuardados);
+    }
+    
+    if (ventasGuardadas) {
+        ventas = JSON.parse(ventasGuardadas);
+    }
+}
 
-formLogin.addEventListener("submit", (e) => 
-    {
-     e.preventDefault();
-     const usuario = document.getElementById("loginUsuario").value.trim();
-     const password = document.getElementById("loginPassword").value.trim();
-     if (usuario === usuarioFijo && password === passwordFijo)
-     {
-         alert("✅ ¡Bienvenido MARROCO!");
-         localStorage.setItem("sesionActiva", "true");
-         mostrarSistema();
-     }
-     else
-     {
-         alert("❌ Usuario o contraseña incorrectos");
-     }   
-    });
+// Guardar datos en localStorage
+function guardarProductos() {
+    localStorage.setItem('productos', JSON.stringify(productos));
+}
 
-// Elementos del DOM
+function guardarVentas() {
+    localStorage.setItem('ventas', JSON.stringify(ventas));
+}
+
+// Sistema de Login
 const loginScreen = document.getElementById('loginScreen');
 const mainSystem = document.getElementById('mainSystem');
 const formLogin = document.getElementById('formLogin');
 
 // Verificar si ya hay sesión activa
-window.addEventListener("DOMContentLoaded", () => 
-    {
-    if (localStorage.getItem("sesionActiva") === "true") 
-    {
+window.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('sesionActiva') === 'true') {
         mostrarSistema();
-     }
-});  
+    }
+});
 
-// Cargar datos del localStorage
-function cargarDatos()
-{
-    const productosGuardados = localStorage.getItem('productos');
-    const ventasGuardadas = localStorage.getItem('ventas');
-    if (productosGuardados) productos = JSON.parse(productosGuardados);
-    if (ventasGuardadas) ventas = JSON.parse(ventasGuardadas);
-}
-function mostrarSistema() 
-{
+// Manejar login
+formLogin.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const usuario = document.getElementById('loginUsuario').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    const usuarioGuardado = localStorage.getItem('usuario');
+    const passwordGuardada = localStorage.getItem('password');
+    
+    if (!usuarioGuardado || !passwordGuardada) {
+        localStorage.setItem('usuario', usuario);
+        localStorage.setItem('password', password);
+        alert('✅ ¡Cuenta creada exitosamente!');
+        mostrarSistema();
+    } else {
+        if (usuario === usuarioGuardado && password === passwordGuardada) {
+            alert('✅ ¡Bienvenido de nuevo!');
+            mostrarSistema();
+        } else {
+            alert('❌ Usuario o contraseña incorrectos');
+        }
+    }
+});
+
+function mostrarSistema() {
     localStorage.setItem('sesionActiva', 'true');
     loginScreen.style.display = 'none';
     mainSystem.style.display = 'block';
+    
     cargarDatos();
     mostrarInventario();
     cargarProductosVenta();
@@ -59,65 +75,74 @@ function mostrarSistema()
     mostrarEstadisticas();
     verificarStockBajo();
     inicializarTabs();
-    cargarProductosReporte();
 }
 
-function cerrarSesion() 
-{
-    if (confirm('¿Estás seguro de cerrar sesión?'))
-    {
+function cerrarSesion() {
+    if (confirm('¿Estás seguro de cerrar sesión?')) {
         localStorage.setItem('sesionActiva', 'false');
         location.reload();
     }
-}
-
-// Guardar datos en localStorage
-function guardarProductos()
-{ 
-    localStorage.setItem('productos', JSON.stringify(productos));
-} 
-function guardarVentas() 
-{ 
-    localStorage.setItem('ventas', JSON.stringify(ventas)); 
 }
 
 // ALERTAS DE STOCK BAJO
 function verificarStockBajo() {
     const productosStockBajo = productos.filter(p => p.cantidad <= 5 && p.cantidad > 0);
     const productosAgotados = productos.filter(p => p.cantidad === 0);
+    
     const alertasDiv = document.getElementById('alertasStock');
     const alertaTexto = document.getElementById('alertaTexto');
-
+    
     if (productosStockBajo.length > 0 || productosAgotados.length > 0) {
         let mensaje = '';
-        if (productosAgotados.length > 0) mensaje += `${productosAgotados.length} producto(s) agotado(s). `;
-        if (productosStockBajo.length > 0) mensaje += `${productosStockBajo.length} producto(s) con stock bajo.`;
+        if (productosAgotados.length > 0) {
+            mensaje += `${productosAgotados.length} producto(s) agotado(s). `;
+        }
+        if (productosStockBajo.length > 0) {
+            mensaje += `${productosStockBajo.length} producto(s) con stock bajo.`;
+        }
         alertaTexto.textContent = mensaje;
         alertasDiv.style.display = 'block';
     } else {
         alertasDiv.style.display = 'none';
     }
+    
     mostrarTablaStockBajo();
 }
 
-function cerrarAlerta() { document.getElementById('alertasStock').style.display = 'none'; }
+function cerrarAlerta() {
+    document.getElementById('alertasStock').style.display = 'none';
+}
 
 function mostrarTablaStockBajo() {
     const tbody = document.getElementById('tablaStockBajo');
     const productosProblema = productos.filter(p => p.cantidad <= 5);
+    
     if (productosProblema.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="empty-state">✅ Todos los productos tienen stock suficiente</td></tr>';
         return;
     }
+    
     tbody.innerHTML = productosProblema.map(p => {
         let estado = '';
         let clase = '';
-        if (p.cantidad === 0) { estado = '🔴 Agotado'; clase = 'stock-agotado'; }
-        else if (p.cantidad <= 5) { estado = '⚠️ Stock Bajo'; clase = 'stock-bajo'; }
-        return `<tr class="${clase}"><td>${p.nombre}</td><td>${p.categoria}</td><td>${p.cantidad}</td><td><strong>${estado}</strong></td></tr>`;
+        if (p.cantidad === 0) {
+            estado = '🔴 Agotado';
+            clase = 'stock-agotado';
+        } else if (p.cantidad <= 5) {
+            estado = '⚠️ Stock Bajo';
+            clase = 'stock-bajo';
+        }
+        
+        return `
+            <tr class="${clase}">
+                <td>${p.nombre}</td>
+                <td>${p.categoria}</td>
+                <td>${p.cantidad}</td>
+                <td><strong>${estado}</strong></td>
+            </tr>
+        `;
     }).join('');
 }
-
 
 // Inicializar sistema de pestañas
 function inicializarTabs() {
@@ -144,8 +169,7 @@ function inicializarTabs() {
                 verificarStockBajo();
             } else if (target === 'graficas') {
                 mostrarGraficas();
-            } else if (target === 'reportes') {
-                cargarProductosReporte();
+            }
         });
     });
 }
@@ -513,272 +537,4 @@ function crearGraficaVentasPorCategoria() {
             }
         }
     });
-    // ==================== REPORTES ====================
-
-function cargarProductosReporte() {
-    const select = document.getElementById('filtroProductoReporte');
-    
-    // Obtener lista única de productos vendidos
-    const productosUnicos = [...new Set(ventas.map(v => v.productoNombre))];
-    
-    select.innerHTML = '<option value="">Todos los productos</option>' + 
-        productosUnicos.map(nombre => `<option value="${nombre}">${nombre}</option>`).join('');
-}
-
-function aplicarFiltrosReporte() {
-    const fechaDesde = document.getElementById('fechaDesde').value;
-    const fechaHasta = document.getElementById('fechaHasta').value;
-    const productoFiltro = document.getElementById('filtroProductoReporte').value;
-    
-    if (!fechaDesde || !fechaHasta) {
-        alert('⚠️ Por favor selecciona ambas fechas');
-        return;
-    }
-    
-    // Convertir fechas para comparación
-    const desde = new Date(fechaDesde + 'T00:00:00');
-    const hasta = new Date(fechaHasta + 'T23:59:59');
-    
-    // Filtrar ventas
-    ventasFiltradas = ventas.filter(v => {
-        // Parsear la fecha de la venta (formato: "dd/mm/yyyy, hh:mm")
-        const [fechaParte] = v.fecha.split(',');
-        const [dia, mes, anio] = fechaParte.trim().split('/');
-        const fechaVenta = new Date(`${anio}-${mes}-${dia}`);
-        
-        const cumpleFecha = fechaVenta >= desde && fechaVenta <= hasta;
-        const cumpleProducto = !productoFiltro || v.productoNombre === productoFiltro;
-        
-        return cumpleFecha && cumpleProducto;
-    });
-    
-    if (ventasFiltradas.length === 0) {
-        alert('❌ No se encontraron ventas con estos filtros');
-        document.getElementById('tbodyReporte').innerHTML = 
-            '<tr><td colspan="6" class="empty-state">No hay ventas en este rango de fechas</td></tr>';
-        actualizarEstadisticasReporte();
-        return;
-    }
-    
-    mostrarReporte();
-    actualizarEstadisticasReporte();
-    alert(`✅ Se encontraron ${ventasFiltradas.length} venta(s)`);
-}
-
-function mostrarReporte() {
-    const tbody = document.getElementById('tbodyReporte');
-    
-    tbody.innerHTML = ventasFiltradas.map(v => `
-        <tr>
-            <td><strong>#${v.id}</strong></td>
-            <td>${v.fecha}</td>
-            <td>${v.productoNombre}</td>
-            <td>$${v.precioUnitario.toFixed(2)}</td>
-            <td>${v.cantidad}</td>
-            <td><strong>$${v.total.toFixed(2)}</strong></td>
-        </tr>
-    `).join('');
-}
-
-function actualizarEstadisticasReporte() {
-    const totalVentas = ventasFiltradas.reduce((sum, v) => sum + v.total, 0);
-    const cantidadProductos = ventasFiltradas.reduce((sum, v) => sum + v.cantidad, 0);
-    const numTransacciones = ventasFiltradas.length;
-    
-    document.getElementById('reporteTotalVentas').textContent = '$' + totalVentas.toFixed(2);
-    document.getElementById('reporteCantidadProductos').textContent = cantidadProductos;
-    document.getElementById('reporteNumTransacciones').textContent = numTransacciones;
-}
-
-// ==================== EXPORTAR A EXCEL ====================
-
-function exportarExcel() {
-    if (ventasFiltradas.length === 0) {
-        alert('❌ No hay datos para exportar. Aplica los filtros primero.');
-        return;
-    }
-    
-    // Crear contenido CSV
-    let csv = 'Código,Fecha,Producto,Precio Unitario,Cantidad,Total\n';
-    
-    ventasFiltradas.forEach(v => {
-        csv += `${v.id},"${v.fecha}","${v.productoNombre}",${v.precioUnitario},${v.cantidad},${v.total}\n`;
-    });
-    
-    // Agregar totales
-    const totalVentas = ventasFiltradas.reduce((sum, v) => sum + v.total, 0);
-    const cantidadProductos = ventasFiltradas.reduce((sum, v) => sum + v.cantidad, 0);
-    
-    csv += '\n';
-    csv += `TOTALES:,,,, ${cantidadProductos}, ${totalVentas.toFixed(2)}\n`;
-    
-    // Descargar archivo
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    const fechaActual = new Date().toISOString().split('T')[0];
-    link.setAttribute('href', url);
-    link.setAttribute('download', `Reporte_Ventas_${fechaActual}.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    alert('✅ Archivo Excel descargado exitosamente');
-}
-
-// ==================== EXPORTAR A PDF ====================
-
-function exportarPDF() {
-    if (ventasFiltradas.length === 0) {
-        alert('❌ No hay datos para exportar. Aplica los filtros primero.');
-        return;
-    }
-    
-    // Crear contenido HTML para el PDF
-    const fechaDesde = document.getElementById('fechaDesde').value;
-    const fechaHasta = document.getElementById('fechaHasta').value;
-    const totalVentas = ventasFiltradas.reduce((sum, v) => sum + v.total, 0);
-    const cantidadProductos = ventasFiltradas.reduce((sum, v) => sum + v.cantidad, 0);
-    
-    let html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <title>Reporte de Ventas</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    padding: 30px;
-                    color: #333;
-                }
-                .header {
-                    text-align: center;
-                    margin-bottom: 30px;
-                    border-bottom: 3px solid #667eea;
-                    padding-bottom: 20px;
-                }
-                .header h1 {
-                    color: #667eea;
-                    margin: 0;
-                }
-                .info {
-                    margin: 20px 0;
-                    padding: 15px;
-                    background: #f8f9fa;
-                    border-radius: 8px;
-                }
-                .info p {
-                    margin: 5px 0;
-                }
-                table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin: 20px 0;
-                }
-                th, td {
-                    padding: 12px;
-                    text-align: left;
-                    border-bottom: 1px solid #ddd;
-                }
-                th {
-                    background: #667eea;
-                    color: white;
-                    font-weight: bold;
-                }
-                tr:hover {
-                    background: #f8f9fa;
-                }
-                .totales {
-                    margin-top: 30px;
-                    padding: 20px;
-                    background: #667eea;
-                    color: white;
-                    border-radius: 8px;
-                }
-                .totales p {
-                    margin: 10px 0;
-                    font-size: 16px;
-                }
-                .footer {
-                    margin-top: 40px;
-                    text-align: center;
-                    color: #666;
-                    font-size: 12px;
-                    border-top: 1px solid #ddd;
-                    padding-top: 20px;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h1>🛒 REPORTE DE VENTAS</h1>
-                <p>Sistema de Inventario y Ventas</p>
-            </div>
-            
-            <div class="info">
-                <p><strong>📅 Período:</strong> ${fechaDesde} hasta ${fechaHasta}</p>
-                <p><strong>📊 Total de transacciones:</strong> ${ventasFiltradas.length}</p>
-                <p><strong>📅 Fecha de generación:</strong> ${new Date().toLocaleString('es-PE')}</p>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Código</th>
-                        <th>Fecha</th>
-                        <th>Producto</th>
-                        <th>Precio Unit.</th>
-                        <th>Cantidad</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    ventasFiltradas.forEach(v => {
-        html += `
-                    <tr>
-                        <td>#${v.id}</td>
-                        <td>${v.fecha}</td>
-                        <td>${v.productoNombre}</td>
-                        <td>$${v.precioUnitario.toFixed(2)}</td>
-                        <td>${v.cantidad}</td>
-                        <td><strong>$${v.total.toFixed(2)}</strong></td>
-                    </tr>
-        `;
-    });
-    
-    html += `
-                </tbody>
-            </table>
-            
-            <div class="totales">
-                <p><strong>📦 Total de Productos Vendidos:</strong> ${cantidadProductos} unidades</p>
-                <p><strong>💰 Total en Ventas:</strong> $${totalVentas.toFixed(2)}</p>
-                <p><strong>💵 Promedio por Venta:</strong> $${(totalVentas / ventasFiltradas.length).toFixed(2)}</p>
-            </div>
-            
-            <div class="footer">
-                <p>Reporte generado automáticamente por el Sistema de Inventario y Ventas</p>
-            </div>
-        </body>
-        </html>
-    `;
-    
-    // Abrir en nueva ventana para imprimir/guardar como PDF
-    const ventana = window.open('', '_blank');
-    ventana.document.write(html);
-    ventana.document.close();
-    
-    // Esperar a que cargue y abrir diálogo de impresión
-    ventana.onload = function() {
-        ventana.print();
-    };
-    
-    alert('✅ PDF generado. Usa "Guardar como PDF" en el diálogo de impresión');
-}
 }
