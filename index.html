@@ -55,16 +55,16 @@
 <body>
   <div id="loginScreen" class="login-box">
     <h1>🔐 Iniciar Sesión</h1>
-    <form id="formLogin">
+    <form id="formLogin" autocomplete="off">
       <div class="form-group">
-        <label>Usuario</label>
-        <input type="text" id="loginUsuario" required />
+        <label for="loginUsuario">Usuario</label>
+        <input type="text" id="loginUsuario" name="usuario" required placeholder="Ingresa tu usuario" autocomplete="off">
       </div>
       <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="loginPassword" required />
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" name="contraseña" required placeholder="Ingresa tu contraseña" autocomplete="new-password">
       </div>
-      <button type="submit">Entrar</button>
+      <button type="submit" class="btn btn-primary">Entrar</button>
       <p class="hint">💡 Usuario: MARROCO | Contraseña: 172008</p>
     </form>
   </div>
