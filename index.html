@@ -11,20 +11,20 @@
     <!-- Pantalla de Login -->
     <div id="loginScreen" class="login-container">
         <div class="login-box">
-            <h1> Iniciar Sesión</h1>
+            <h1>🔐 Iniciar Sesión</h1>
             <form id="formLogin">
                 <div class="form-group">
                     <label>Usuario</label>
-                    <input type="text" id="loginUsuario" required placeholder="Ingresa tu usuario">
+                    <input type="text" id="loginUsuario" required placeholder="Ingresa tu usuario" autocomplete="username">
                 </div>
                 
                 <div class="form-group">
                     <label>Contraseña</label>
-                    <input type="password" id="loginPassword" required placeholder="Ingresa tu contraseña">
+                    <input type="password" id="loginPassword" required placeholder="Ingresa tu contraseña" autocomplete="current-password">
                 </div>
                 
                 <button type="submit" class="btn btn-primary">Entrar</button>
-                <p class="hint"> Primera vez: crea tu usuario y contraseña</p>
+                <p class="hint">💡 Usuario: MARROCO | Contraseña: 172008</p>
             </form>
         </div>
     </div>
@@ -33,7 +33,7 @@
     <div id="mainSystem" class="container" style="display: none;">
         <div class="header-bar">
             <h1>🛒 Sistema de Ventas e Inventario</h1>
-            <button class="btn btn-danger" onclick="cerrarSesion()"> Cerrar Sesión</button>
+            <button class="btn btn-danger" onclick="cerrarSesion()">🚪 Cerrar Sesión</button>
         </div>
 
         <!-- Alertas de Stock Bajo -->
@@ -50,7 +50,7 @@
             <button class="tab active" data-tab="inventario">📦 Inventario</button>
             <button class="tab" data-tab="ventas">💰 Ventas</button>
             <button class="tab" data-tab="estadisticas">📊 Estadísticas</button>
-            <button class="tab" data-tab="reportes">📊 Reportes</button>
+            <button class="tab" data-tab="reportes">📋 Reportes</button>
             <button class="tab" data-tab="graficas">📈 Gráficas</button>
         </div>
 
@@ -113,23 +113,25 @@
                 </div>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Categoría</th>
-                        <th>Precio</th>
-                        <th>Cantidad</th>
-                        <th>Valor Total</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaProductos">
-                    <tr>
-                        <td colspan="6" class="empty-state">No hay productos en el inventario</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Cantidad</th>
+                            <th>Valor Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaProductos">
+                        <tr>
+                            <td colspan="6" class="empty-state">No hay productos en el inventario</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Sección de Ventas -->
@@ -160,8 +162,10 @@
                     </div>
                 </div>
                 
-                <button type="submit" class="btn btn-success">✅ Registrar Venta</button>
-                <button type="button" class="btn btn-primary" onclick="imprimirTicket()" id="btnImprimir" style="display: none; margin-left: 10px;">🖨️ Imprimir Ticket</button>
+                <div class="botones-venta">
+                    <button type="submit" class="btn btn-success">✅ Registrar Venta</button>
+                    <button type="button" class="btn btn-primary" onclick="imprimirTicket()" id="btnImprimir" style="display: none;">🖨️ Imprimir Ticket</button>
+                </div>
             </form>
 
             <div class="ventas-header">
@@ -172,22 +176,24 @@
                 </div>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                        <th>Precio Unitario</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaVentas">
-                    <tr>
-                        <td colspan="5" class="empty-state">No hay ventas registradas</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Precio Unitario</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaVentas">
+                        <tr>
+                            <td colspan="5" class="empty-state">No hay ventas registradas</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Sección de Estadísticas -->
@@ -216,22 +222,25 @@
             </div>
 
             <h2 style="margin-top: 30px;">⚠️ Productos con Stock Bajo</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Categoría</th>
-                        <th>Cantidad Restante</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaStockBajo">
-                    <tr>
-                        <td colspan="4" class="empty-state">✅ Todos los productos tienen stock suficiente</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Categoría</th>
+                            <th>Cantidad Restante</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaStockBajo">
+                        <tr>
+                            <td colspan="4" class="empty-state">✅ Todos los productos tienen stock suficiente</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
         <!-- Sección de Reportes -->
         <div id="reportes" class="section">
             <h2>📊 Generar Reportes</h2>
@@ -311,6 +320,7 @@
                 </div>
             </div>
         </div>
+
         <!-- Sección de Gráficas -->
         <div id="graficas" class="section">
             <h2>📈 Análisis Visual de Ventas</h2>
