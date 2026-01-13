@@ -5,54 +5,50 @@ let ultimaVenta = null;
 let ventasFiltradas = [];
 
 // Usuario fijo
-const usuarioFijo = "MARROCO" ;
-const passwordFijo = "172008" ;
+const usuarioFijo = "MARROCO";
+const passwordFijo = "172008";
 
-// Cargar datos del localStorage
-function cargarDatos() {
-    const productosGuardados = localStorage.getItem('productos');
-    const ventasGuardadas = localStorage.getItem('ventas');
-    if (productosGuardados) productos = JSON.parse(productosGuardados);
-    if (ventasGuardadas) ventas = JSON.parse(ventasGuardadas);
-}
-
-// Guardar datos en localStorage
-function guardarProductos()
-{ 
-    localStorage.setItem('productos', JSON.stringify(productos));
-} 
-function guardarVentas() 
-{ 
-    localStorage.setItem('ventas', JSON.stringify(ventas)); 
-}
-
-// Sistema de Login
+// Elementos del DOM
 const loginScreen = document.getElementById('loginScreen');
 const mainSystem = document.getElementById('mainSystem');
 const formLogin = document.getElementById('formLogin');
 
 // Verificar si ya hay sesión activa
-window.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('sesionActiva') === 'true') {
+window.addEventListener("DOMContentLoaded", () => 
+    {
+    if (localStorage.getItem("sesionActiva") === "true") 
+    {
         mostrarSistema();
-    }
-});
-
+     }
+});  
+  
 // Manejar login
-formLogin.addEventListener('submit', (e) => {
+formLogin.addEventListener('submit', (e) => 
+    {
     e.preventDefault();
-    const usuario = document.getElementById('loginUsuario').value;
-    const password = document.getElementById('loginPassword').value;
+    const usuario = document.getElementById('loginUsuario').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
 
-    if (usuario === usuarioFijo && password === passwordFijo) {
+    if (usuario === usuarioFijo && password === passwordFijo) 
+    {
         alert('✅ ¡Bienvenido MARROCO!');
+        localStorage.setItem("sesionActiva", "true");
         mostrarSistema();
     } else {
         alert('❌ Usuario o contraseña incorrectos');
     }
 });
 
-function mostrarSistema() {
+// Cargar datos del localStorage
+function cargarDatos()
+{
+    const productosGuardados = localStorage.getItem('productos');
+    const ventasGuardadas = localStorage.getItem('ventas');
+    if (productosGuardados) productos = JSON.parse(productosGuardados);
+    if (ventasGuardadas) ventas = JSON.parse(ventasGuardadas);
+}
+function mostrarSistema() 
+{
     localStorage.setItem('sesionActiva', 'true');
     loginScreen.style.display = 'none';
     mainSystem.style.display = 'block';
@@ -66,11 +62,23 @@ function mostrarSistema() {
     cargarProductosReporte();
 }
 
-function cerrarSesion() {
-    if (confirm('¿Estás seguro de cerrar sesión?')) {
+function cerrarSesion() 
+{
+    if (confirm('¿Estás seguro de cerrar sesión?'))
+    {
         localStorage.setItem('sesionActiva', 'false');
         location.reload();
     }
+}
+
+// Guardar datos en localStorage
+function guardarProductos()
+{ 
+    localStorage.setItem('productos', JSON.stringify(productos));
+} 
+function guardarVentas() 
+{ 
+    localStorage.setItem('ventas', JSON.stringify(ventas)); 
 }
 
 // ALERTAS DE STOCK BAJO
