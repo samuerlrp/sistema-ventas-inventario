@@ -5,8 +5,8 @@ let ultimaVenta = null;
 let ventasFiltradas = [];
 
 // Usuario fijo
-const usuarioFijo = "MARROCO";
-const passwordFijo = "172008";
+const usuarioFijo = "MARROCO" ;
+const passwordFijo = "172008" ;
 
 // Cargar datos del localStorage
 function cargarDatos() {
@@ -17,8 +17,14 @@ function cargarDatos() {
 }
 
 // Guardar datos en localStorage
-function guardarProductos() { localStorage.setItem('productos', JSON.stringify(productos)); }
-function guardarVentas() { localStorage.setItem('ventas', JSON.stringify(ventas)); }
+function guardarProductos()
+{ 
+    localStorage.setItem('productos', JSON.stringify(productos));
+} 
+function guardarVentas() 
+{ 
+    localStorage.setItem('ventas', JSON.stringify(ventas)); 
+}
 
 // Sistema de Login
 const loginScreen = document.getElementById('loginScreen');
