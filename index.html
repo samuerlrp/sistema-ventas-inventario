@@ -5,23 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Ventas e Inventario</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <!-- Pantalla de Login -->
-    <div id="loginScreen" class="login-box">
-      <h1>🔐 Iniciar Sesión</h1>
-     <form id="formLogin" autocomplete="off">
-        <div class="form-group">
-             <label for="loginUsuario">Usuario</label>
-             <input type="text" id="loginUsuario" name="usuario" required placeholder="Ingresa tu usuario" autocomplete="off">
-             </div>   
-          <div class="form-group">
-            <label for="loginPassword">Contraseña</label>
-                    <input type="password" id="loginPassword" name="contraseña" required placeholder="Ingresa tu contraseña" autocomplete="new-password">
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>🔐 Iniciar Sesión</h1>
+            <form id="formLogin">
+                <div class="form-group">
+                    <label>Usuario</label>
+                    <input type="text" id="loginUsuario" required placeholder="Ingresa tu usuario">
                 </div>
-             
+                
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="loginPassword" required placeholder="Ingresa tu contraseña">
+                </div>
+                
                 <button type="submit" class="btn btn-primary">Entrar</button>
-                <p class="hint">💡 Usuario: MARROCO | Contraseña: 172008</p>
+                <p class="hint">💡 Primera vez: crea tu usuario y contraseña</p>
             </form>
         </div>
     </div>
@@ -47,7 +50,6 @@
             <button class="tab active" data-tab="inventario">📦 Inventario</button>
             <button class="tab" data-tab="ventas">💰 Ventas</button>
             <button class="tab" data-tab="estadisticas">📊 Estadísticas</button>
-            <button class="tab" data-tab="reportes">📋 Reportes</button>
             <button class="tab" data-tab="graficas">📈 Gráficas</button>
         </div>
 
@@ -110,25 +112,23 @@
                 </div>
             </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Categoría</th>
-                            <th>Precio</th>
-                            <th>Cantidad</th>
-                            <th>Valor Total</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaProductos">
-                        <tr>
-                            <td colspan="6" class="empty-state">No hay productos en el inventario</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Valor Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaProductos">
+                    <tr>
+                        <td colspan="6" class="empty-state">No hay productos en el inventario</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <!-- Sección de Ventas -->
@@ -159,10 +159,8 @@
                     </div>
                 </div>
                 
-                <div class="botones-venta">
-                    <button type="submit" class="btn btn-success">✅ Registrar Venta</button>
-                    <button type="button" class="btn btn-primary" onclick="imprimirTicket()" id="btnImprimir" style="display: none;">🖨️ Imprimir Ticket</button>
-                </div>
+                <button type="submit" class="btn btn-success">✅ Registrar Venta</button>
+                <button type="button" class="btn btn-primary" onclick="imprimirTicket()" id="btnImprimir" style="display: none; margin-left: 10px;">🖨️ Imprimir Ticket</button>
             </form>
 
             <div class="ventas-header">
@@ -173,24 +171,22 @@
                 </div>
             </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Producto</th>
-                            <th>Cantidad</th>
-                            <th>Precio Unitario</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaVentas">
-                        <tr>
-                            <td colspan="5" class="empty-state">No hay ventas registradas</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaVentas">
+                    <tr>
+                        <td colspan="5" class="empty-state">No hay ventas registradas</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <!-- Sección de Estadísticas -->
@@ -219,103 +215,21 @@
             </div>
 
             <h2 style="margin-top: 30px;">⚠️ Productos con Stock Bajo</h2>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Producto</th>
-                            <th>Categoría</th>
-                            <th>Cantidad Restante</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tablaStockBajo">
-                        <tr>
-                            <td colspan="4" class="empty-state">✅ Todos los productos tienen stock suficiente</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Sección de Reportes -->
-        <div id="reportes" class="section">
-            <h2>📊 Generar Reportes</h2>
-            
-            <div class="reportes-container">
-                <div class="filtros-reporte">
-                    <h3>Filtros de Reporte</h3>
-                    
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Fecha Desde</label>
-                            <input type="date" id="fechaDesde">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Fecha Hasta</label>
-                            <input type="date" id="fechaHasta">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Producto (opcional)</label>
-                            <select id="filtroProductoReporte">
-                                <option value="">Todos los productos</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>&nbsp;</label>
-                            <button class="btn btn-primary" onclick="aplicarFiltrosReporte()">🔍 Filtrar</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="resultados-reporte">
-                    <div class="reporte-header">
-                        <h3>Resultados del Reporte</h3>
-                        <div class="botones-exportar">
-                            <button class="btn btn-success" onclick="exportarExcel()">📗 Exportar a Excel</button>
-                            <button class="btn btn-danger" onclick="exportarPDF()">📕 Exportar a PDF</button>
-                        </div>
-                    </div>
-                    
-                    <div class="reporte-stats">
-                        <div class="stat-mini">
-                            <span class="stat-label">Total Ventas:</span>
-                            <span class="stat-valor" id="reporteTotalVentas">$0.00</span>
-                        </div>
-                        <div class="stat-mini">
-                            <span class="stat-label">Productos Vendidos:</span>
-                            <span class="stat-valor" id="reporteCantidadProductos">0</span>
-                        </div>
-                        <div class="stat-mini">
-                            <span class="stat-label">Transacciones:</span>
-                            <span class="stat-valor" id="reporteNumTransacciones">0</span>
-                        </div>
-                    </div>
-                    
-                    <div class="table-container">
-                        <table id="tablaReporte">
-                            <thead>
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Fecha</th>
-                                    <th>Producto</th>
-                                    <th>Precio Unit.</th>
-                                    <th>Cantidad</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbodyReporte">
-                                <tr>
-                                    <td colspan="6" class="empty-state">Selecciona los filtros y presiona "Filtrar"</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Cantidad Restante</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaStockBajo">
+                    <tr>
+                        <td colspan="4" class="empty-state">✅ Todos los productos tienen stock suficiente</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <!-- Sección de Gráficas -->
