@@ -4,28 +4,21 @@ let ventas = [];
 let ultimaVenta = null;
 let ventasFiltradas = [];
 
+// Usuario fijo
+const usuarioFijo = "MARROCO";
+const passwordFijo = "172008";
+
 // Cargar datos del localStorage
 function cargarDatos() {
     const productosGuardados = localStorage.getItem('productos');
     const ventasGuardadas = localStorage.getItem('ventas');
-    
-    if (productosGuardados) {
-        productos = JSON.parse(productosGuardados);
-    }
-    
-    if (ventasGuardadas) {
-        ventas = JSON.parse(ventasGuardadas);
-    }
+    if (productosGuardados) productos = JSON.parse(productosGuardados);
+    if (ventasGuardadas) ventas = JSON.parse(ventasGuardadas);
 }
 
 // Guardar datos en localStorage
-function guardarProductos() {
-    localStorage.setItem('productos', JSON.stringify(productos));
-}
-
-function guardarVentas() {
-    localStorage.setItem('ventas', JSON.stringify(ventas));
-}
+function guardarProductos() { localStorage.setItem('productos', JSON.stringify(productos)); }
+function guardarVentas() { localStorage.setItem('ventas', JSON.stringify(ventas)); }
 
 // Sistema de Login
 const loginScreen = document.getElementById('loginScreen');
@@ -42,25 +35,14 @@ window.addEventListener('DOMContentLoaded', () => {
 // Manejar login
 formLogin.addEventListener('submit', (e) => {
     e.preventDefault();
-    
     const usuario = document.getElementById('loginUsuario').value;
     const password = document.getElementById('loginPassword').value;
-    
-    const usuarioGuardado = localStorage.getItem('usuario');
-    const passwordGuardada = localStorage.getItem('password');
-    
-    if (!usuarioGuardado || !passwordGuardada) {
-        localStorage.setItem('usuario', usuario);
-        localStorage.setItem('password', password);
-        alert('✅ ¡Cuenta creada exitosamente!');
+
+    if (usuario === usuarioFijo && password === passwordFijo) {
+        alert('✅ ¡Bienvenido MARROCO!');
         mostrarSistema();
     } else {
-        if (usuario === usuarioGuardado && password === passwordGuardada) {
-            alert('✅ ¡Bienvenido de nuevo!');
-            mostrarSistema();
-        } else {
-            alert('❌ Usuario o contraseña incorrectos');
-        }
+        alert('❌ Usuario o contraseña incorrectos');
     }
 });
 
@@ -68,7 +50,6 @@ function mostrarSistema() {
     localStorage.setItem('sesionActiva', 'true');
     loginScreen.style.display = 'none';
     mainSystem.style.display = 'block';
-    
     cargarDatos();
     mostrarInventario();
     cargarProductosVenta();
@@ -90,61 +71,39 @@ function cerrarSesion() {
 function verificarStockBajo() {
     const productosStockBajo = productos.filter(p => p.cantidad <= 5 && p.cantidad > 0);
     const productosAgotados = productos.filter(p => p.cantidad === 0);
-    
     const alertasDiv = document.getElementById('alertasStock');
     const alertaTexto = document.getElementById('alertaTexto');
-    
+
     if (productosStockBajo.length > 0 || productosAgotados.length > 0) {
         let mensaje = '';
-        if (productosAgotados.length > 0) {
-            mensaje += `${productosAgotados.length} producto(s) agotado(s). `;
-        }
-        if (productosStockBajo.length > 0) {
-            mensaje += `${productosStockBajo.length} producto(s) con stock bajo.`;
-        }
+        if (productosAgotados.length > 0) mensaje += `${productosAgotados.length} producto(s) agotado(s). `;
+        if (productosStockBajo.length > 0) mensaje += `${productosStockBajo.length} producto(s) con stock bajo.`;
         alertaTexto.textContent = mensaje;
         alertasDiv.style.display = 'block';
     } else {
         alertasDiv.style.display = 'none';
     }
-    
     mostrarTablaStockBajo();
 }
 
-function cerrarAlerta() {
-    document.getElementById('alertasStock').style.display = 'none';
-}
+function cerrarAlerta() { document.getElementById('alertasStock').style.display = 'none'; }
 
 function mostrarTablaStockBajo() {
     const tbody = document.getElementById('tablaStockBajo');
     const productosProblema = productos.filter(p => p.cantidad <= 5);
-    
     if (productosProblema.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" class="empty-state">✅ Todos los productos tienen stock suficiente</td></tr>';
         return;
     }
-    
     tbody.innerHTML = productosProblema.map(p => {
         let estado = '';
         let clase = '';
-        if (p.cantidad === 0) {
-            estado = '🔴 Agotado';
-            clase = 'stock-agotado';
-        } else if (p.cantidad <= 5) {
-            estado = '⚠️ Stock Bajo';
-            clase = 'stock-bajo';
-        }
-        
-        return `
-            <tr class="${clase}">
-                <td>${p.nombre}</td>
-                <td>${p.categoria}</td>
-                <td>${p.cantidad}</td>
-                <td><strong>${estado}</strong></td>
-            </tr>
-        `;
+        if (p.cantidad === 0) { estado = '🔴 Agotado'; clase = 'stock-agotado'; }
+        else if (p.cantidad <= 5) { estado = '⚠️ Stock Bajo'; clase = 'stock-bajo'; }
+        return `<tr class="${clase}"><td>${p.nombre}</td><td>${p.categoria}</td><td>${p.cantidad}</td><td><strong>${estado}</strong></td></tr>`;
     }).join('');
 }
+
 
 // Inicializar sistema de pestañas
 function inicializarTabs() {
