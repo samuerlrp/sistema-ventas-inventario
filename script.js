@@ -8,6 +8,23 @@ let ventasFiltradas = [];
 const usuarioFijo = "MARROCO";
 const passwordFijo = "172008";
 
+formLogin.addEventListener("submit", (e) => 
+    {
+     e.preventDefault();
+     const usuario = document.getElementById("loginUsuario").value.trim();
+     const password = document.getElementById("loginPassword").value.trim();
+     if (usuario === usuarioFijo && password === passwordFijo)
+     {
+         alert("✅ ¡Bienvenido MARROCO!");
+         localStorage.setItem("sesionActiva", "true");
+         mostrarSistema();
+     }
+     else
+     {
+         alert("❌ Usuario o contraseña incorrectos");
+     }   
+    });
+
 // Elementos del DOM
 const loginScreen = document.getElementById('loginScreen');
 const mainSystem = document.getElementById('mainSystem');
@@ -21,23 +38,6 @@ window.addEventListener("DOMContentLoaded", () =>
         mostrarSistema();
      }
 });  
-  
-// Manejar login
-formLogin.addEventListener('submit', (e) => 
-    {
-    e.preventDefault();
-    const usuario = document.getElementById('loginUsuario').value.trim();
-    const password = document.getElementById('loginPassword').value.trim();
-
-    if (usuario === usuarioFijo && password === passwordFijo) 
-    {
-        alert('✅ ¡Bienvenido MARROCO!');
-        localStorage.setItem("sesionActiva", "true");
-        mostrarSistema();
-    } else {
-        alert('❌ Usuario o contraseña incorrectos');
-    }
-});
 
 // Cargar datos del localStorage
 function cargarDatos()
